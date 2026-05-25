@@ -1,16 +1,14 @@
 import os
+from pathlib import Path
 from flask import Flask, render_template, request, redirect, url_for, flash
 import vercel_blob
 
-# CÁCH ĐỊNH VỊ THƯ MỤC TỰ ĐỘNG CHỐNG LỖI 500:
-# Hệ thống sẽ tự tìm thư mục 'templates' bất kể bạn đặt file app.py ở đâu
-base_dir = os.path.dirname(os.path.abspath(__file__))
-template_dir = os.path.join(base_dir, 'templates')
-if not os.path.exists(template_dir):
-    template_dir = os.path.abspath(os.path.join(base_dir, '..', 'templates'))
+# Xác định đường dẫn gốc của dự án bằng Pathlib
+BASE_DIR = Path(__file__).resolve().parent.parent
+TEMPLATE_DIR = BASE_DIR / "templates"
 
-app = Flask(__name__, template_folder=template_dir)
-app.secret_key = "khoa_bi_mat_on_dinh_2026"
+app = Flask(__name__, template_folder=str(TEMPLATE_DIR))
+app.secret_key = "chuoi_bao_mat_he_thong_2026"
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
@@ -21,27 +19,25 @@ def upload_file():
         
         file = request.files['file']
         if file.filename == '':
-            flash('Bạn chưa chọn ảnh nào!')
+            flash('Bạn chưa chọn ảnh!')
             return redirect(request.url)
         
         if file:
             try:
-                # Đọc dữ liệu ảnh và tải thẳng lên Vercel Blob vĩnh viễn
                 file_bytes = file.read()
                 vercel_blob.put(file.filename, file_bytes, {"access": "public"})
                 flash('Tải ảnh lên đám mây thành công!')
                 return redirect(url_for('upload_file'))
             except Exception as e:
-                flash(f'Lỗi tải ảnh: {str(e)}')
+                flash(f'Lỗi hệ thống: {str(e)}')
                 return redirect(request.url)
 
-    # Lấy danh sách ảnh đã lưu từ kho Vercel Blob
     images = []
     try:
         blob_list = vercel_blob.list()
         for b in blob_list.get('blobs', []):
             images.append(b.get('url'))
     except Exception as e:
-        print(f"Lỗi hiển thị danh sách ảnh: {e}")
+        print(f"Lỗi kết nối bộ lưu trữ: {e}")
         
     return render_template('index.html', images=images)
