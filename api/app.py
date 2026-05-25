@@ -2,12 +2,15 @@ import os
 from flask import Flask, render_template, request, redirect, url_for, flash
 import vercel_blob
 
-# Định vị thư mục templates chính xác tuyệt đối cho Vercel
-current_dir = os.path.dirname(__file__)
-template_dir = os.path.abspath(os.path.join(current_dir, '..', 'templates'))
+# CÁCH ĐỊNH VỊ THƯ MỤC TỰ ĐỘNG CHỐNG LỖI 500:
+# Hệ thống sẽ tự tìm thư mục 'templates' bất kể bạn đặt file app.py ở đâu
+base_dir = os.path.dirname(os.path.abspath(__file__))
+template_dir = os.path.join(base_dir, 'templates')
+if not os.path.exists(template_dir):
+    template_dir = os.path.abspath(os.path.join(base_dir, '..', 'templates'))
 
 app = Flask(__name__, template_folder=template_dir)
-app.secret_key = "chuoi_bi_mat_khong_the_doan_duoc"
+app.secret_key = "khoa_bi_mat_on_dinh_2026"
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
@@ -23,7 +26,7 @@ def upload_file():
         
         if file:
             try:
-                # Đọc dữ liệu ảnh và đẩy thẳng lên Vercel Blob vĩnh viễn
+                # Đọc dữ liệu ảnh và tải thẳng lên Vercel Blob vĩnh viễn
                 file_bytes = file.read()
                 vercel_blob.put(file.filename, file_bytes, {"access": "public"})
                 flash('Tải ảnh lên đám mây thành công!')
